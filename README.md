@@ -3,21 +3,24 @@
 This GitHub Action zips a specified directory in your repository and uploads it to NexusMods using the NexusMods API. It is designed to automate the process of packaging and uploading mod files as part of your CI/CD workflow.
 
 ## Features
+
 - Zips a directory in your repository
 - Supports excluding files from the zip
 - Uploads the zip file to NexusMods
 
 ## Inputs
-| Name      | Description                        | Required | Default |
-|-----------|------------------------------------|----------|---------|
-| api_key   | API key for NexusMods              | Yes      |         |
-| mod_id    | Mod ID on NexusMods                | Yes      |         |
-| game_id   | Game ID on NexusMods               | Yes      |         |
-| directory | Directory to zip                   | Yes      | .       |
-| exclude   | Files to exclude from the zip      | No       |         |
-| filename  | Name of the zip file               | Yes      |         |
+
+| Name      | Description                   | Required | Default |
+| --------- | ----------------------------- | -------- | ------- |
+| api_key   | API key for NexusMods         | Yes      |         |
+| mod_id    | Mod ID on NexusMods           | Yes      |         |
+| game_id   | Game ID on NexusMods          | Yes      |         |
+| directory | Directory to zip              | Yes      | .       |
+| exclude   | Files to exclude from the zip | No       |         |
+| filename  | Name of the zip file          | Yes      |         |
 
 ## Usage
+
 Add the following step to your workflow:
 
 ```yaml
@@ -33,6 +36,7 @@ Add the following step to your workflow:
 ```
 
 ## Example
+
 ```yaml
 - name: Upload mod to NexusMods
   uses: your-org/nexusmods-upload-action@v1
@@ -41,9 +45,10 @@ Add the following step to your workflow:
     mod_id: 12345
     game_id: skyrim
     directory: ./dist
-    exclude: '*.log'
+    exclude: "*.log"
     filename: my-mod.zip
 ```
 
 ## License
+
 MIT

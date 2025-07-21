@@ -5,7 +5,11 @@ import { resolve } from "path";
 import fetch from "node-fetch";
 import process from "process";
 
-async function zip(directory, exclude, filename) {
+async function zip(
+  directory: string,
+  exclude: string,
+  filename: string,
+): Promise<{ zipFilePath: string; fileSize: number }> {
   info(`Zipping directory: ${directory}`);
 
   const zipFilePath = resolve(process.cwd(), filename);
@@ -20,10 +24,22 @@ async function zip(directory, exclude, filename) {
   const stats = statSync(zipFilePath);
   const fileSize = stats.size;
 
+  if (fileSize === 0) {
+    throw new Error(
+      "Zipped file is empty. Please check the directory and exclude patterns.",
+    );
+  }
+
   return { zipFilePath, fileSize };
 }
 
-async function fetchPresignedURL(modId, gameId, apiKey, fileSize, filename) {
+async function fetchPresignedURL(
+  modId: string,
+  gameId: string,
+  apiKey: string,
+  fileSize: number,
+  filename: string,
+): Promise<string> {
   const domain = process.env.NEXUSMODS_DOMAIN || "www.nexusmods.com";
   const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}`;
 
@@ -49,7 +65,7 @@ async function fetchPresignedURL(modId, gameId, apiKey, fileSize, filename) {
   return uploadUrl;
 }
 
-async function uploadFile(uploadUrl, filePath) {
+async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
   const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
@@ -57,6 +73,7 @@ async function uploadFile(uploadUrl, filePath) {
     },
     body: createReadStream(filePath),
   });
+
   if (!uploadRes.ok) {
     throw new Error(
       `Upload failed: ${uploadRes.status} ${await uploadRes.text()}`,
@@ -64,8 +81,9 @@ async function uploadFile(uploadUrl, filePath) {
   }
 }
 
-export async function run() {
-  info("Starting NexusMods upload action...");
+export async function run(): Promise<void> {
+  info("Starting NexusMods upload action");
+
   try {
     const apiKey = getInput("api_key", { required: true });
     const modId = getInput("mod_id", { required: true });
@@ -88,6 +106,10 @@ export async function run() {
 
     info("File uploaded successfully to NexusMods.");
   } catch (error) {
-    setFailed(error.message);
+    if (error instanceof Error) {
+      setFailed(error.message);
+    } else {
+      setFailed(String(error));
+    }
   }
 }
