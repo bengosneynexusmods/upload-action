@@ -1,0 +1,26 @@
+name: "Upload to Nexumods"
+description: "Zips the repository and uploads it to Nexumods"
+inputs:
+  api_key:
+    description: "API key"
+    required: true
+  mod_id:
+    description: "Mod ID on Nexumods"
+    required: true
+  game_id:
+    description: "Game ID on Nexumods"
+    required: true
+  directory:
+    description: "Directory to zip"
+    required: true
+    default: "."
+  exclude:
+    description: "Files to exclude from the zip"
+    required: false
+    default: ""
+  filename:
+    description: "Name of the zip file"
+    required: true
+runs:
+  using: "node20"
+  main: "src/index.js"

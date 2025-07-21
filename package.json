@@ -1,0 +1,40 @@
+{
+  "name": "nexusmods-upload-action",
+  "description": "Upload files to Nexus Mods using the Nexus Mods API",
+  "version": "0.0.1",
+  "author": "nexusmods",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/javascript-action.git"
+  },
+  "bugs": {
+    "url": "https://github.com/actions/javascript-action/issues"
+  },
+  "keywords": [
+    "actions"
+  ],
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "format:write": "npx prettier --write .",
+    "format:check": "npx prettier --check .",
+    "local-action": "npx @github/local-action . src/main.js .env"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1"
+  },
+  "devDependencies": {
+    "@github/local-action": "^5.0.0",
+    "prettier": "^3.6.2",
+    "prettier-eslint": "^16.4.2"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "*"
+  }
+}
