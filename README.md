@@ -1,5 +1,6 @@
 # NexusMods Upload GitHub Action
 
+# THIS AND THE API IT'S USING ARE CURRENTLY PRE-RELEASE AND WILL MOST LIKELY NOT WORK!
 
 This GitHub Action uploads a zip file to NexusMods using the NexusMods API. It is designed to automate the process of uploading mod files as part of your CI/CD workflow.
 
@@ -21,6 +22,8 @@ This GitHub Action uploads a zip file to NexusMods using the NexusMods API. It i
 
 First, use another action to create a zip file. Then, use this action to upload the zip file to NexusMods:
 
+## Example
+
 ```yaml
 - name: Zip files
   run: zip -r my-mod.zip ./dist
@@ -31,21 +34,6 @@ First, use another action to create a zip file. Then, use this action to upload 
     api_key: ${{ secrets.NEXUSMODS_API_KEY }}
     mod_id: <your_mod_id>
     game_id: <your_game_id>
-    filename: my-mod.zip
-```
-
-## Example
-
-```yaml
-- name: Zip files
-  run: zip -r my-mod.zip ./dist
-
-- name: Upload mod to NexusMods
-  uses: your-org/nexusmods-upload-action@v1
-  with:
-    api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-    mod_id: 12345
-    game_id: skyrim
     filename: my-mod.zip
 ```
 
