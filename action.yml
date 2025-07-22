@@ -10,16 +10,8 @@ inputs:
   game_id:
     description: "Game ID on Nexumods"
     required: true
-  directory:
-    description: "Directory to zip"
-    required: true
-    default: "."
-  exclude:
-    description: "Files to exclude from the zip"
-    required: false
-    default: ""
   filename:
-    description: "Name of the zip file"
+    description: "Name of the zip file to upload"
     required: true
 runs:
   using: "node20"
