@@ -1,21 +1,24 @@
-name: "Upload to Nexumods"
-description: "Zips the repository and uploads it to Nexumods"
+name: Upload to Nexumods
+description: Zips the repository and uploads it to Nexumods
 branding:
-  icon: "upload-cloud"
-  color: "orange"
+  icon: upload-cloud
+  color: orange
 inputs:
   api_key:
-    description: "API key"
+    description: API key
     required: true
   mod_id:
-    description: "Mod ID on Nexumods"
+    description: Mod ID on Nexumods
     required: true
   game_id:
-    description: "Game ID on Nexumods"
+    description: Game ID on Nexumods
     required: true
   filename:
-    description: "Name of the zip file to upload"
+    description: Name of the zip file to upload
+    required: true
+  file_id:
+    description: File ID to update
     required: true
 runs:
-  using: "node20"
-  main: "dist/index.js"
+  using: node20
+  main: dist/index.js

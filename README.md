@@ -4,19 +4,19 @@
 
 This GitHub Action uploads a zip file to NexusMods using the NexusMods API. It is designed to automate the process of uploading mod files as part of your CI/CD workflow.
 
-
 ## Features
 
 - Uploads a zip file to NexusMods
 
 ## Inputs
 
-| Name      | Description                   | Required | Default |
-| --------- | ----------------------------- | -------- | ------- |
-| api_key   | API key for NexusMods         | Yes      |         |
-| mod_id    | Mod ID on NexusMods           | Yes      |         |
-| game_id   | Game ID on NexusMods          | Yes      |         |
-| filename  | Name of the zip file to upload| Yes      |         |
+| Name     | Description                    | Required |
+| -------- | ------------------------------ | -------- |
+| api_key  | API key for NexusMods          | Yes      |
+| mod_id   | Mod ID on NexusMods            | Yes      |
+| game_id  | Game ID on NexusMods           | Yes      |
+| filename | Name of the zip file to upload | Yes      |
+| file_id  | File ID on NexusMods           | Yes      |
 
 ## Usage
 
@@ -51,12 +51,11 @@ First run `npm install`, then set the following required enviroment variables:
 - `INPUT_MOD_ID`
 - `INPUT_GAME_ID`
 - `INPUT_FILENAME`
-  
+- `INPUT_FILE_ID`
+
 The `NEXUSMODS_DOMAIN` enviroment variable will override the api domain.
 
-
 Then running `npm run local-action` will compile the typescript and run the action localy.
-
 
 ## License
 

@@ -1,38 +1,57 @@
-import { getInput, info, setFailed } from "@actions/core";
+import { getInput, info, debug, setFailed } from "@actions/core";
 import { statSync, createReadStream } from "fs";
 import fetch from "node-fetch";
 import process from "process";
 
-async function fetchPresignedURL(
-  modId: string,
-  gameId: string,
+const domain = process.env.NEXUSMODS_DOMAIN || "www.nexusmods.com";
+
+async function fetchWithAuth(
+  url: Parameters<typeof fetch>[0],
   apiKey: string,
-  fileSize: number,
-  filename: string,
-): Promise<string> {
-  const domain = process.env.NEXUSMODS_DOMAIN || "www.nexusmods.com";
+  options?: Parameters<typeof fetch>[1],
+): ReturnType<typeof fetch> {
+  const headers = {
+    ...options?.headers,
+    cookie: `nexusmods_session=${apiKey};`,
+    "Content-Type": "application/json",
+  };
+
+  const init = { headers, ...options };
+  debug(`Fetching URL: ${url} with options: ${JSON.stringify(init, null, 2)}`);
+
+  return fetch(url, init);
+}
+
+type FetchPresignedURLResponse = {
+  presigned_url: string;
+  uuid: string;
+};
+
+type FetchPresignedURLOptions = {
+  modId: string;
+  gameId: string;
+  apiKey: string;
+  fileSize: number;
+  filename: string;
+};
+
+async function fetchPresignedURL(
+  options: FetchPresignedURLOptions,
+): Promise<FetchPresignedURLResponse> {
+  const { modId, gameId, apiKey, fileSize, filename } = options;
+
   const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}`;
 
   info(`Requesting upload URL from: ${url}`);
-  const response = await fetch(url, {
-    headers: {
-      cookie: `nexusmods_session=${apiKey};`,
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await fetchWithAuth(url, apiKey);
 
   if (!response.ok) {
     throw new Error(
       `Failed to get upload URL: ${response.status} - ${await response.text()}`,
     );
   }
-  const data = await response.json();
-  const uploadUrl = data.presigned_url;
-  if (!uploadUrl) {
-    throw new Error("No presigned_url in response");
-  }
 
-  return uploadUrl;
+  return (await response.json()) as FetchPresignedURLResponse;
 }
 
 async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
@@ -51,6 +70,41 @@ async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
   }
 }
 
+type FileClaimRequestOptions = {
+  name: string;
+  version: string;
+  filesize: number;
+  removeOldVersion: boolean;
+  fileUUID: string;
+  fileCategory: number;
+  latestModVersion: boolean;
+};
+
+type ClaimFileOptions = {
+  gameId: string;
+  modId: string;
+  fileId: string;
+  apiKey: string;
+  requestOptions: FileClaimRequestOptions;
+};
+
+async function claimFile(options: ClaimFileOptions): Promise<void> {
+  const { gameId, modId, fileId, apiKey, requestOptions } = options;
+
+  const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/${fileId}`;
+  info(`Claiming file at: ${url}`);
+  const response = await fetchWithAuth(url, apiKey, {
+    method: "PUT",
+    body: JSON.stringify(requestOptions),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to claim file: ${response.status} - ${await response.text()}`,
+    );
+  }
+}
+
 export async function run(): Promise<void> {
   info("Starting NexusMods upload action");
 
@@ -59,18 +113,35 @@ export async function run(): Promise<void> {
     const modId = getInput("mod_id", { required: true });
     const gameId = getInput("game_id", { required: true });
     const filename = getInput("filename", { required: true });
+    const fileId = getInput("file_id", { required: true });
 
     const { size: fileSize } = statSync(filename);
 
-    const uploadUrl = await fetchPresignedURL(
+    const { presigned_url, uuid } = await fetchPresignedURL({
       modId,
       gameId,
       apiKey,
       fileSize,
       filename,
-    );
+    });
 
-    await uploadFile(uploadUrl, filename);
+    await uploadFile(presigned_url, filename);
+
+    await claimFile({
+      gameId,
+      modId,
+      fileId,
+      apiKey,
+      requestOptions: {
+        name: filename,
+        version: "1.0.0",
+        filesize: fileSize,
+        fileUUID: uuid,
+        fileCategory: 1,
+        removeOldVersion: true,
+        latestModVersion: true,
+      },
+    });
 
     info("File uploaded successfully to NexusMods.");
   } catch (error) {
