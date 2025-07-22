@@ -24,7 +24,7 @@
     "build": "tsc",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
-    "local-action": "npx @github/local-action . dist/main.js .env"
+    "local-action": "tsc && npx @github/local-action . dist/main.js .env"
   },
   "license": "MIT",
   "dependencies": {
