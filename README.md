@@ -37,6 +37,27 @@ First, use another action to create a zip file. Then, use this action to upload 
     filename: my-mod.zip
 ```
 
+## Development
+
+### Requirements
+
+This project requires Node v20 or higher
+
+### Running localy
+
+First run `npm install`, then set the following required enviroment variables:
+
+- `INPUT_API_KEY`
+- `INPUT_MOD_ID`
+- `INPUT_GAME_ID`
+- `INPUT_FILENAME`
+  
+The `NEXUSMODS_DOMAIN` enviroment variable will override the api domain.
+
+
+Then running `npm run local-action` will compile the typescript and run the action localy.
+
+
 ## License
 
 MIT
