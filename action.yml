@@ -1,5 +1,8 @@
 name: "Upload to Nexumods"
 description: "Zips the repository and uploads it to Nexumods"
+branding:
+  icon: "upload-cloud"
+  color: "orange"
 inputs:
   api_key:
     description: "API key"
