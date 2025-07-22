@@ -1,37 +1,7 @@
 import { getInput, info, setFailed } from "@actions/core";
-import { exec } from "@actions/exec";
 import { statSync, createReadStream } from "fs";
-import { resolve } from "path";
 import fetch from "node-fetch";
 import process from "process";
-
-async function zip(
-  directory: string,
-  exclude: string,
-  filename: string,
-): Promise<{ zipFilePath: string; fileSize: number }> {
-  info(`Zipping directory: ${directory}`);
-
-  const zipFilePath = resolve(process.cwd(), filename);
-  const zipArgs = ["-r", zipFilePath, "."];
-
-  if (exclude) {
-    zipArgs.push("--exclude", exclude);
-  }
-
-  await exec("zip", zipArgs, { cwd: directory });
-
-  const stats = statSync(zipFilePath);
-  const fileSize = stats.size;
-
-  if (fileSize === 0) {
-    throw new Error(
-      "Zipped file is empty. Please check the directory and exclude patterns.",
-    );
-  }
-
-  return { zipFilePath, fileSize };
-}
 
 async function fetchPresignedURL(
   modId: string,
@@ -88,11 +58,9 @@ export async function run(): Promise<void> {
     const apiKey = getInput("api_key", { required: true });
     const modId = getInput("mod_id", { required: true });
     const gameId = getInput("game_id", { required: true });
-    const directory = getInput("directory", { required: true });
-    const exclude = getInput("exclude") || "";
     const filename = getInput("filename", { required: true });
 
-    const { zipFilePath, fileSize } = await zip(directory, exclude, filename);
+    const { size: fileSize } = statSync(filename);
 
     const uploadUrl = await fetchPresignedURL(
       modId,
@@ -102,7 +70,7 @@ export async function run(): Promise<void> {
       filename,
     );
 
-    await uploadFile(uploadUrl, zipFilePath);
+    await uploadFile(uploadUrl, filename);
 
     info("File uploaded successfully to NexusMods.");
   } catch (error) {
