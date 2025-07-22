@@ -112,8 +112,14 @@ export async function run(): Promise<void> {
     const apiKey = getInput("api_key", { required: true });
     const modId = getInput("mod_id", { required: true });
     const gameId = getInput("game_id", { required: true });
+
     const filename = getInput("filename", { required: true });
     const fileId = getInput("file_id", { required: true });
+
+    const version = getInput("version", { required: true });
+    const fileCategory = getInput("fileCategory") || "1";
+    const removeOldVersion = getInput("removeOldVersion") || "true";
+    const latestModVersion = getInput("latestModVersion") || "true";
 
     const { size: fileSize } = statSync(filename);
 
@@ -134,12 +140,12 @@ export async function run(): Promise<void> {
       apiKey,
       requestOptions: {
         name: filename,
-        version: "1.0.0",
+        version: version,
         filesize: fileSize,
         fileUUID: uuid,
-        fileCategory: 1,
-        removeOldVersion: true,
-        latestModVersion: true,
+        fileCategory: Number(fileCategory),
+        removeOldVersion: removeOldVersion === "true",
+        latestModVersion: latestModVersion === "true",
       },
     });
 

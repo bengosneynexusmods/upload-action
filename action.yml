@@ -19,6 +19,21 @@ inputs:
   file_id:
     description: File ID to update
     required: true
+  version:
+    description: Version string for the uploaded file (e.g., 1.0.0)
+    required: true
+  fileCategory:
+    description: 'File category for the uploaded file (default: 1)'
+    required: false
+    default: '1'
+  removeOldVersion:
+    description: 'Remove old version of the file (default: true)'
+    required: false
+    default: 'true'
+  latestModVersion:
+    description: 'Mark as latest mod version (default: true)'
+    required: false
+    default: 'true'
 runs:
   using: node20
   main: dist/index.js

@@ -10,13 +10,17 @@ This GitHub Action uploads a zip file to NexusMods using the NexusMods API. It i
 
 ## Inputs
 
-| Name     | Description                    | Required |
-| -------- | ------------------------------ | -------- |
-| api_key  | API key for NexusMods          | Yes      |
-| mod_id   | Mod ID on NexusMods            | Yes      |
-| game_id  | Game ID on NexusMods           | Yes      |
-| filename | Name of the zip file to upload | Yes      |
-| file_id  | File ID on NexusMods           | Yes      |
+| Name             | Description                          | Required | Default |
+| ---------------- | ------------------------------------ | -------- | ------- |
+| api_key          | API key for NexusMods                | Yes      |         |
+| mod_id           | Mod ID on NexusMods                  | Yes      |         |
+| game_id          | Game ID on NexusMods                 | Yes      |         |
+| filename         | Name of the zip file to upload       | Yes      |         |
+| file_id          | File ID on NexusMods                 | Yes      |         |
+| version          | Version string for the uploaded file | Yes      |         |
+| fileCategory     | File category for the uploaded file  | No       | 1       |
+| removeOldVersion | Remove old version of the file       | No       | true    |
+| latestModVersion | Mark as latest mod version           | No       | true    |
 
 ## Usage
 
@@ -35,6 +39,10 @@ First, use another action to create a zip file. Then, use this action to upload 
     mod_id: <your_mod_id>
     game_id: <your_game_id>
     filename: my-mod.zip
+    version: 1.0.0
+    fileCategory: 1 # optional
+    removeOldVersion: true # optional
+    latestModVersion: true # optional
 ```
 
 ## Development
@@ -52,6 +60,7 @@ First run `npm install`, then set the following required enviroment variables:
 - `INPUT_GAME_ID`
 - `INPUT_FILENAME`
 - `INPUT_FILE_ID`
+- `INPUT_VERSION`
 
 The `NEXUSMODS_DOMAIN` enviroment variable will override the api domain.
 
