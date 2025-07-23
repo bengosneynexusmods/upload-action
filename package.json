@@ -21,10 +21,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc",
+    "check": "npx tsc --noEmit",
+    "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
-    "local-action": "tsc && npx @github/local-action . dist/index.js .env"
+    "local-action": "npm run build && npx @github/local-action . dist/index.js .env"
   },
   "license": "MIT",
   "dependencies": {
@@ -32,10 +33,15 @@
   },
   "devDependencies": {
     "@github/local-action": "^5.0.0",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/node": "^20.19.9",
     "@types/node-fetch": "^2.6.12",
     "prettier": "^3.6.2",
     "prettier-eslint": "^16.4.2",
+    "rollup": "^4.45.1",
     "typescript": "^5.0.0"
   },
   "optionalDependencies": {
