@@ -66,6 +66,8 @@ The `NEXUSMODS_DOMAIN` enviroment variable will override the api domain.
 
 Then running `npm run local-action` will compile the typescript and run the action localy.
 
+Before commiting you must build the project with `npm run build`.
+
 ## License
 
 MIT
