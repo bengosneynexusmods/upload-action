@@ -33,14 +33,17 @@ type FetchPresignedURLOptions = {
   apiKey: string;
   fileSize: number;
   filename: string;
+  fileId: string;
+  version?: string;
 };
 
 async function fetchPresignedURL(
   options: FetchPresignedURLOptions,
 ): Promise<FetchPresignedURLResponse> {
-  const { modId, gameId, apiKey, fileSize, filename } = options;
+  const { modId, gameId, apiKey, fileSize, filename, fileId, version } =
+    options;
 
-  const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}`;
+  const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}&existing_file_id=${fileId}&version=${version}`;
 
   info(`Requesting upload URL from: ${url}`);
   const response = await fetchWithAuth(url, apiKey);
@@ -73,11 +76,13 @@ async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
 type FileClaimRequestOptions = {
   name: string;
   version: string;
+  remove_old_version: boolean;
+  file_uuid: string;
   filesize: number;
-  removeOldVersion: boolean;
-  fileUUID: string;
-  fileCategory: number;
-  latestModVersion: boolean;
+  remove_nmm?: boolean;
+  primary_nmm?: boolean;
+  file_category: number;
+  latest_mod_version: boolean;
 };
 
 type ClaimFileOptions = {
@@ -129,6 +134,8 @@ export async function run(): Promise<void> {
       apiKey,
       fileSize,
       filename,
+      fileId,
+      version,
     });
 
     await uploadFile(presigned_url, filename);
@@ -142,10 +149,10 @@ export async function run(): Promise<void> {
         name: filename,
         version: version,
         filesize: fileSize,
-        fileUUID: uuid,
-        fileCategory: Number(fileCategory),
-        removeOldVersion: removeOldVersion === "true",
-        latestModVersion: latestModVersion === "true",
+        file_uuid: uuid,
+        file_category: Number(fileCategory),
+        remove_old_version: removeOldVersion === "true",
+        latest_mod_version: latestModVersion === "true",
       },
     });
 

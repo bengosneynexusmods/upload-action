@@ -14,8 +14,8 @@ async function fetchWithAuth(url, apiKey, options) {
     return fetch(url, init);
 }
 async function fetchPresignedURL(options) {
-    const { modId, gameId, apiKey, fileSize, filename } = options;
-    const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}`;
+    const { modId, gameId, apiKey, fileSize, filename, fileId, version } = options;
+    const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}&existing_file_id=${fileId}&version=${version}`;
     info(`Requesting upload URL from: ${url}`);
     const response = await fetchWithAuth(url, apiKey);
     if (!response.ok) {
@@ -66,6 +66,8 @@ export async function run() {
             apiKey,
             fileSize,
             filename,
+            fileId,
+            version,
         });
         await uploadFile(presigned_url, filename);
         await claimFile({
@@ -77,10 +79,10 @@ export async function run() {
                 name: filename,
                 version: version,
                 filesize: fileSize,
-                fileUUID: uuid,
-                fileCategory: Number(fileCategory),
-                removeOldVersion: removeOldVersion === "true",
-                latestModVersion: latestModVersion === "true",
+                file_uuid: uuid,
+                file_category: Number(fileCategory),
+                remove_old_version: removeOldVersion === "true",
+                latest_mod_version: latestModVersion === "true",
             },
         });
         info("File uploaded successfully to NexusMods.");
