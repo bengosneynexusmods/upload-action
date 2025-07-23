@@ -27,7 +27,7 @@ async function uploadFile(uploadUrl, filePath) {
     const uploadRes = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
-            "Content-Type": "application/zip",
+            "Content-Type": "application/octet-stream",
         },
         body: createReadStream(filePath),
     });
