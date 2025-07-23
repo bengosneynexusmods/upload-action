@@ -108937,6 +108937,7 @@ async function run() {
         }
     }
 }
+run();
 
 export { run };
 //# sourceMappingURL=index.js.map
