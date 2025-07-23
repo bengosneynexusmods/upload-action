@@ -1,7 +1,9 @@
-import { getInput, info, debug, setFailed } from "@actions/core";
+import { getInput, setFailed } from "@actions/core";
 import { statSync, createReadStream } from "fs";
 import fetch from "node-fetch";
 import process from "process";
+
+const { debug, log:info } = console;
 
 const domain = process.env.NEXUSMODS_DOMAIN || "www.nexusmods.com";
 

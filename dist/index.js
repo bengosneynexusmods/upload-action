@@ -108843,6 +108843,7 @@ fetch.isRedirect = function (code) {
 // expose Promise
 fetch.Promise = global.Promise;
 
+const { debug, log: info } = console;
 const domain = process$1.env.NEXUSMODS_DOMAIN || "www.nexusmods.com";
 async function fetchWithAuth(url, apiKey, options) {
     const headers = {
@@ -108851,13 +108852,13 @@ async function fetchWithAuth(url, apiKey, options) {
         "Content-Type": "application/json",
     };
     const init = { headers, ...options };
-    coreExports.debug(`Fetching URL: ${url} with options: ${JSON.stringify(init, null, 2)}`);
+    debug(`Fetching URL: ${url} with options: ${JSON.stringify(init, null, 2)}`);
     return fetch(url, init);
 }
 async function fetchPresignedURL(options) {
     const { modId, gameId, apiKey, fileSize, filename, fileId, version } = options;
     const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}&existing_file_id=${fileId}&version=${version}`;
-    coreExports.info(`Requesting upload URL from: ${url}`);
+    info(`Requesting upload URL from: ${url}`);
     const response = await fetchWithAuth(url, apiKey);
     if (!response.ok) {
         throw new Error(`Failed to get upload URL: ${response.status} - ${await response.text()}`);
@@ -108879,7 +108880,7 @@ async function uploadFile(uploadUrl, filePath) {
 async function claimFile(options) {
     const { gameId, modId, fileId, apiKey, requestOptions } = options;
     const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/${fileId}`;
-    coreExports.info(`Claiming file at: ${url}`);
+    info(`Claiming file at: ${url}`);
     const response = await fetchWithAuth(url, apiKey, {
         method: "PUT",
         body: JSON.stringify(requestOptions),
@@ -108889,7 +108890,7 @@ async function claimFile(options) {
     }
 }
 async function run() {
-    coreExports.info("Starting NexusMods upload action");
+    info("Starting NexusMods upload action");
     try {
         const apiKey = coreExports.getInput("api_key", { required: true });
         const modId = coreExports.getInput("mod_id", { required: true });
@@ -108926,7 +108927,7 @@ async function run() {
                 latest_mod_version: latestModVersion === "true",
             },
         });
-        coreExports.info("File uploaded successfully to NexusMods.");
+        info("File uploaded successfully to NexusMods.");
     }
     catch (error) {
         if (error instanceof Error) {
