@@ -11,12 +11,6 @@ jobs:
       id: checkout
       uses: actions/checkout@v3
 
-    - name: Get latest semver tag
-      id: version
-      run: |
-        latest_tag=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n1)
-        echo "version=${latest_tag}" >> $GITHUB_OUTPUT
-
     - name: Zip mod files
       id: zip
       run: |
@@ -24,11 +18,11 @@ jobs:
 
     - name: Run NexusMods upload action
       id: upload
-      uses: ./
+      uses: bengosneynexusmods/upload-action@main
       with:
         api_key: ${{ secrets.NEXUSMODS_API_KEY }}
         mod_id: ${{ vars.MOD_ID }}
         game_id: ${{ vars.GAME_ID }}
         filename: ${{ vars.FILENAME }}
         file_id: ${{ vars.FILE_ID }}
-        version: ${{ steps.version.outputs.version }}
+        version: ${{ vars.VERSION }}
