@@ -1,0 +1,28 @@
+name: Test NexusMods Upload Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      id: checkout
+      uses: actions/checkout@v3
+
+    - name: Zip mod files
+      id: zip
+      run: |
+        zip -r ${{ vars.filename }} src/*
+
+    - name: Run NexusMods upload action
+      id: upload
+      uses: ./
+      with:
+        api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+        mod_id: ${{ vars.mod_id }}
+        game_id: ${{ vars.game_id }}
+        filename: ${{ vars.filename }}
+        file_id: ${{ vars.file_id }}
+        version: ${{ vars.version }}

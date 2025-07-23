@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# This script is used to run the NexusMods upload action in a local environment using `gh act` and the same env vars the local-action uses.
+gh act -s NEXUSMODS_API_KEY=${INPUT_API_KEY} \
+    --var MOD_ID=${INPUT_MOD_ID} \
+    --var GAME_ID=${INPUT_GAME_ID} \
+    --var FILENAME=${INPUT_FILENAME} \
+    --var FILE_ID=${INPUT_FILE_ID} \
+    --var VERSION=${INPUT_VERSION} \
+    "$@"
