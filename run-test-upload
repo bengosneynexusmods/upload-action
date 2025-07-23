@@ -6,5 +6,4 @@ gh act -s NEXUSMODS_API_KEY=${INPUT_API_KEY} \
     --var GAME_ID=${INPUT_GAME_ID} \
     --var FILENAME=${INPUT_FILENAME} \
     --var FILE_ID=${INPUT_FILE_ID} \
-    --var VERSION=${INPUT_VERSION} \
     "$@"
