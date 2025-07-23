@@ -21,8 +21,8 @@ jobs:
       uses: ./
       with:
         api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-        mod_id: ${{ vars.mod_id }}
-        game_id: ${{ vars.game_id }}
-        filename: ${{ vars.filename }}
-        file_id: ${{ vars.file_id }}
-        version: ${{ vars.version }}
+        mod_id: ${{ vars.MOD_ID }}
+        game_id: ${{ vars.GAME_ID }}
+        filename: ${{ vars.FILENAME }}
+        file_id: ${{ vars.FILE_ID }}
+        version: ${{ vars.VERSION }}
