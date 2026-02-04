@@ -108846,9 +108846,9 @@ fetch.Promise = global.Promise;
 const apiBase = process$1.env.NEXUSMODS_API_BASE?.trim() || "https://api.nexusmods.com/v3";
 async function fetchWithAuth(url, apiKey, options) {
     const headers = {
-        ...options?.headers,
-        apikey: apiKey,
         "Content-Type": "application/json",
+        apikey: apiKey,
+        ...options?.headers,
     };
     const init = { headers, ...options };
     coreExports.debug(`Fetching URL: ${url} with options: ${JSON.stringify(init, null, 2)}`);
@@ -108909,7 +108909,8 @@ async function pollUploadState(uuid, apiKey, pollIntervalMs = 2000, maxAttempts 
         if (data.state === "failed") {
             throw new Error(`Upload processing failed for ${uuid}`);
         }
-        await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+        const delay = Math.min(pollIntervalMs * Math.pow(1.5, attempt), 30000);
+        await new Promise((resolve) => setTimeout(resolve, delay));
     }
     throw new Error(`Upload processing timed out after ${maxAttempts} attempts for ${uuid}`);
 }

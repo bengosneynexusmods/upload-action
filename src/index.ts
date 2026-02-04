@@ -12,9 +12,9 @@ async function fetchWithAuth(
   options?: Parameters<typeof fetch>[1],
 ): ReturnType<typeof fetch> {
   const headers = {
-    ...options?.headers,
-    apikey: apiKey,
     "Content-Type": "application/json",
+    apikey: apiKey,
+    ...options?.headers,
   };
 
   const init = { headers, ...options };
@@ -109,7 +109,8 @@ async function pollUploadState(uuid: string, apiKey: string, pollIntervalMs = 20
       throw new Error(`Upload processing failed for ${uuid}`);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    const delay = Math.min(pollIntervalMs * Math.pow(1.5, attempt), 30000);
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   throw new Error(`Upload processing timed out after ${maxAttempts} attempts for ${uuid}`);
