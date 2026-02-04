@@ -2,8 +2,9 @@ import { getInput, info, debug, setFailed } from "@actions/core";
 import { statSync, createReadStream } from "fs";
 import fetch from "node-fetch";
 import process from "process";
+import path from "path";
 
-const domain = process.env.NEXUSMODS_DOMAIN || "www.nexusmods.com";
+const apiBase = process.env.NEXUSMODS_API_BASE?.trim() || "https://api.nexusmods.com/v3";
 
 async function fetchWithAuth(
   url: Parameters<typeof fetch>[0],
@@ -12,7 +13,7 @@ async function fetchWithAuth(
 ): ReturnType<typeof fetch> {
   const headers = {
     ...options?.headers,
-    cookie: `nexusmods_session=${apiKey};`,
+    apikey: apiKey,
     "Content-Type": "application/json",
   };
 
@@ -22,39 +23,28 @@ async function fetchWithAuth(
   return fetch(url, init);
 }
 
-type FetchPresignedURLResponse = {
+type RequestUploadResponse = {
   presigned_url: string;
   uuid: string;
 };
 
-type FetchPresignedURLOptions = {
-  modId: string;
-  gameId: string;
-  apiKey: string;
-  fileSize: number;
-  filename: string;
-  fileId: string;
-  version?: string;
-};
-
-async function fetchPresignedURL(
-  options: FetchPresignedURLOptions,
-): Promise<FetchPresignedURLResponse> {
-  const { modId, gameId, apiKey, fileSize, filename, fileId, version } =
-    options;
-
-  const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/url?total_size=${fileSize}&filename=${filename}&existing_file_id=${fileId}&version=${version}`;
+async function requestUpload(apiKey: string, fileSize: number, filename: string): Promise<RequestUploadResponse> {
+  const url = `${apiBase}/uploads`;
 
   info(`Requesting upload URL from: ${url}`);
-  const response = await fetchWithAuth(url, apiKey);
+  const response = await fetchWithAuth(url, apiKey, {
+    method: "POST",
+    body: JSON.stringify({
+      filename: path.basename(filename),
+      size_bytes: String(fileSize),
+    }),
+  });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to get upload URL: ${response.status} - ${await response.text()}`,
-    );
+    throw new Error(`Failed to get upload URL: ${response.status} - ${await response.text()}`);
   }
 
-  return (await response.json()) as FetchPresignedURLResponse;
+  return (await response.json()) as RequestUploadResponse;
 }
 
 async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
@@ -67,46 +57,88 @@ async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
   });
 
   if (!uploadRes.ok) {
-    throw new Error(
-      `Upload failed: ${uploadRes.status} ${await uploadRes.text()}`,
-    );
+    throw new Error(`Upload failed: ${uploadRes.status} ${await uploadRes.text()}`);
   }
 }
 
-type FileClaimRequestOptions = {
-  name: string;
-  version: string;
-  remove_old_version: boolean;
-  file_uuid: string;
-  filesize: number;
-  remove_nmm?: boolean;
-  primary_nmm?: boolean;
-  file_category: number;
-  latest_mod_version: boolean;
+type FinaliseUploadResponse = {
+  uuid: string;
+  state: string;
 };
 
-type ClaimFileOptions = {
-  gameId: string;
-  modId: string;
-  fileId: string;
-  apiKey: string;
-  requestOptions: FileClaimRequestOptions;
-};
+async function finaliseUpload(uuid: string, apiKey: string): Promise<FinaliseUploadResponse> {
+  const url = `${apiBase}/uploads/${uuid}/finalise`;
+  info(`Finalising upload at: ${url}`);
 
-async function claimFile(options: ClaimFileOptions): Promise<void> {
-  const { gameId, modId, fileId, apiKey, requestOptions } = options;
-
-  const url = `https://${domain}/api/game/${gameId}/mod/${modId}/file/${fileId}`;
-  info(`Claiming file at: ${url}`);
   const response = await fetchWithAuth(url, apiKey, {
-    method: "PUT",
-    body: JSON.stringify(requestOptions),
+    method: "POST",
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to claim file: ${response.status} - ${await response.text()}`,
-    );
+    throw new Error(`Failed to finalise upload: ${response.status} - ${await response.text()}`);
+  }
+
+  return (await response.json()) as FinaliseUploadResponse;
+}
+
+type GetUploadResponse = {
+  uuid: string;
+  state: string;
+};
+
+async function pollUploadState(uuid: string, apiKey: string, pollIntervalMs = 2000, maxAttempts = 60): Promise<void> {
+  const url = `${apiBase}/uploads/${uuid}`;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const response = await fetchWithAuth(url, apiKey, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get upload state: ${response.status} - ${await response.text()}`);
+    }
+
+    const data = (await response.json()) as GetUploadResponse;
+    info(`Polling upload ${uuid}: state = ${data.state}`);
+
+    if (data.state === "available") {
+      return;
+    }
+
+    if (data.state === "failed") {
+      throw new Error(`Upload processing failed for ${uuid}`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+  }
+
+  throw new Error(`Upload processing timed out after ${maxAttempts} attempts for ${uuid}`);
+}
+
+async function claimFile(
+  apiKey: string,
+  uploadId: string,
+  modUid: string,
+  name: string,
+  version: string,
+  fileCategory: string,
+): Promise<void> {
+  const url = `${apiBase}/mod_files`;
+  info(`Claiming file at: ${url}`);
+
+  const response = await fetchWithAuth(url, apiKey, {
+    method: "POST",
+    body: JSON.stringify({
+      upload_id: uploadId,
+      mod_uid: modUid,
+      name: name,
+      version: version,
+      file_category: fileCategory,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to claim file: ${response.status} - ${await response.text()}`);
   }
 }
 
@@ -115,46 +147,32 @@ export async function run(): Promise<void> {
 
   try {
     const apiKey = getInput("api_key", { required: true });
-    const modId = getInput("mod_id", { required: true });
-    const gameId = getInput("game_id", { required: true });
-
+    const modUid = getInput("mod_uid", { required: true });
     const filename = getInput("filename", { required: true });
-    const fileId = getInput("file_id", { required: true });
-
     const version = getInput("version", { required: true });
-    const fileCategory = getInput("fileCategory") || "1";
-    const removeOldVersion = getInput("removeOldVersion") || "true";
-    const latestModVersion = getInput("latestModVersion") || "true";
+    const name = getInput("name") || path.basename(filename);
+    const fileCategory = getInput("file_category") || "main";
 
     const { size: fileSize } = statSync(filename);
 
-    const { presigned_url, uuid } = await fetchPresignedURL({
-      modId,
-      gameId,
-      apiKey,
-      fileSize,
-      filename,
-      fileId,
-      version,
-    });
+    // Step 1: Request upload location
+    const { presigned_url, uuid } = await requestUpload(apiKey, fileSize, filename);
+    info(`Received upload UUID: ${uuid}`);
 
+    // Step 2: Upload file data
     await uploadFile(presigned_url, filename);
+    info("File data uploaded successfully");
 
-    await claimFile({
-      gameId,
-      modId,
-      fileId,
-      apiKey,
-      requestOptions: {
-        name: filename,
-        version: version,
-        filesize: fileSize,
-        file_uuid: uuid,
-        file_category: Number(fileCategory),
-        remove_old_version: removeOldVersion === "true",
-        latest_mod_version: latestModVersion === "true",
-      },
-    });
+    // Step 3: Finalise upload
+    const finaliseResult = await finaliseUpload(uuid, apiKey);
+    info(`Finalised upload: ${finaliseResult.uuid} (state: ${finaliseResult.state})`);
+
+    // Step 4: Poll until upload is available
+    await pollUploadState(uuid, apiKey);
+    info("Upload is now available");
+
+    // Step 5: Claim file (associate with mod)
+    await claimFile(apiKey, uuid, modUid, name, version, fileCategory);
 
     info("File uploaded successfully to NexusMods.");
   } catch (error) {
@@ -165,5 +183,3 @@ export async function run(): Promise<void> {
     }
   }
 }
-
-run();
