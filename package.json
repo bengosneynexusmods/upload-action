@@ -28,6 +28,9 @@
     "local-action": "npx @github/local-action . src/index.ts .env"
   },
   "license": "MIT",
+  "prettier": {
+    "printWidth": 120
+  },
   "dependencies": {
     "@actions/core": "^1.11.1"
   },
