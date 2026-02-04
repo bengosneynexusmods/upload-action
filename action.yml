@@ -1,5 +1,5 @@
-name: Upload to Nexumods
-description: Zips the repository and uploads it to Nexumods
+name: Upload to Nexus Mods
+description: Uploads a file to Nexus Mods
 branding:
   icon: upload-cloud
   color: orange
@@ -7,17 +7,11 @@ inputs:
   api_key:
     description: API key
     required: true
-  mod_id:
-    description: Mod ID on Nexumods
-    required: true
-  game_id:
-    description: Game ID on Nexumods
+  mod_uid:
+    description: Mod UID on Nexus Mods
     required: true
   filename:
     description: Name of the zip file to upload
-    required: true
-  file_id:
-    description: File ID to update
     required: true
   version:
     description: Version string for the uploaded file (e.g., 1.0.0)
@@ -26,14 +20,6 @@ inputs:
     description: 'File category for the uploaded file (default: 1)'
     required: false
     default: '1'
-  removeOldVersion:
-    description: 'Remove old version of the file (default: true)'
-    required: false
-    default: 'true'
-  latestModVersion:
-    description: 'Mark as latest mod version (default: true)'
-    required: false
-    default: 'true'
 runs:
   using: node20
   main: dist/index.js

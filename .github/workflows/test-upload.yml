@@ -21,8 +21,6 @@ jobs:
       uses: bengosneynexusmods/upload-action@main
       with:
         api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-        mod_id: ${{ vars.MOD_ID }}
-        game_id: ${{ vars.GAME_ID }}
+        mod_uid: ${{ vars.MOD_UID }}
         filename: ${{ vars.FILENAME }}
-        file_id: ${{ vars.FILE_ID }}
         version: ${{ vars.VERSION }}
