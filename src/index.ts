@@ -47,11 +47,12 @@ async function requestUpload(apiKey: string, fileSize: number, filename: string)
   return (await response.json()) as RequestUploadResponse;
 }
 
-async function uploadFile(uploadUrl: string, filePath: string): Promise<void> {
+async function uploadFile(uploadUrl: string, filePath: string, fileSize: number): Promise<void> {
   const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
       "Content-Type": "application/octet-stream",
+      "Content-Length": String(fileSize),
     },
     body: createReadStream(filePath),
   });
@@ -161,7 +162,7 @@ export async function run(): Promise<void> {
     info(`Received upload UUID: ${uuid}`);
 
     // Step 2: Upload file data
-    await uploadFile(presigned_url, filename);
+    await uploadFile(presigned_url, filename, fileSize);
     info("File data uploaded successfully");
 
     // Step 3: Finalise upload
