@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import process from "process";
 import path from "path";
 
-import { paths } from "./openapi.schema";
+import type { Endpoint } from "./api-types";
 
 const apiBase = process.env.NEXUSMODS_API_BASE?.trim() || "https://api.nexusmods.com/v3";
 
@@ -25,11 +25,12 @@ async function fetchWithAuth(
   return fetch(url, init);
 }
 
-type ModDetailsParams = paths["/games/{game_domain}/mods/{mod_id}"]["get"]["parameters"]["path"];
-type ModDetailsResponse =
-  paths["/games/{game_domain}/mods/{mod_id}"]["get"]["responses"]["200"]["content"]["application/json"];
+type ModDetailsEndpoint = Endpoint<"/games/{game_domain}/mods/{mod_id}">;
 
-async function getModDetails(params: ModDetailsParams, apiKey: string): Promise<ModDetailsResponse> {
+async function getModDetails(
+  params: ModDetailsEndpoint["params"],
+  apiKey: string,
+): Promise<ModDetailsEndpoint["response"]> {
   const { game_domain, mod_id } = params;
   const url = `${apiBase}/games/${game_domain}/mods/${mod_id}`;
   const response = await fetchWithAuth(url, apiKey);
@@ -38,13 +39,15 @@ async function getModDetails(params: ModDetailsParams, apiKey: string): Promise<
     throw new Error(`Failed to get mod details: ${response.status} - ${await response.text()}`);
   }
 
-  return (await response.json()) as ModDetailsResponse;
+  return (await response.json()) as ModDetailsEndpoint["response"];
 }
 
-type RequestUploadParams = paths["/uploads"]["post"]["requestBody"]["content"]["application/json"];
-type RequestUploadResponse = paths["/uploads"]["post"]["responses"]["201"]["content"]["application/json"];
+type RequestUploadEndpoint = Endpoint<"/uploads", "post", 201>;
 
-async function requestUpload(params: RequestUploadParams, apiKey: string): Promise<RequestUploadResponse> {
+async function requestUpload(
+  params: RequestUploadEndpoint["body"],
+  apiKey: string,
+): Promise<RequestUploadEndpoint["response"]> {
   const { filename, size_bytes } = params;
   const url = `${apiBase}/uploads`;
 
@@ -61,7 +64,7 @@ async function requestUpload(params: RequestUploadParams, apiKey: string): Promi
     throw new Error(`Failed to get upload URL: ${response.status} - ${await response.text()}`);
   }
 
-  return (await response.json()) as RequestUploadResponse;
+  return (await response.json()) as RequestUploadEndpoint["response"];
 }
 
 async function uploadFile(uploadUrl: string, filePath: string, fileSize: number): Promise<void> {
@@ -79,11 +82,12 @@ async function uploadFile(uploadUrl: string, filePath: string, fileSize: number)
   }
 }
 
-type FinaliseUploadParams = paths["/uploads/{id}/finalise"]["post"]["parameters"]["path"];
-type FinaliseUploadResponse =
-  paths["/uploads/{id}/finalise"]["post"]["responses"]["200"]["content"]["application/json"];
+type FinaliseUploadEndpoint = Endpoint<"/uploads/{id}/finalise", "post">;
 
-async function finaliseUpload(params: FinaliseUploadParams, apiKey: string): Promise<FinaliseUploadResponse> {
+async function finaliseUpload(
+  params: FinaliseUploadEndpoint["params"],
+  apiKey: string,
+): Promise<FinaliseUploadEndpoint["response"]> {
   const { id } = params;
   const url = `${apiBase}/uploads/${id}/finalise`;
   info(`Finalising upload at: ${url}`);
@@ -96,18 +100,17 @@ async function finaliseUpload(params: FinaliseUploadParams, apiKey: string): Pro
     throw new Error(`Failed to finalise upload: ${response.status} - ${await response.text()}`);
   }
 
-  return (await response.json()) as FinaliseUploadResponse;
+  return (await response.json()) as FinaliseUploadEndpoint["response"];
 }
 
-type GetUploadParams = paths["/uploads/{id}"]["get"]["parameters"]["path"];
-type GetUploadResponse = paths["/uploads/{id}"]["get"]["responses"]["200"]["content"]["application/json"];
+type GetUploadEndpoint = Endpoint<"/uploads/{id}">;
 
 async function pollUploadState(
-  params: GetUploadParams,
+  params: GetUploadEndpoint["params"],
   apiKey: string,
   pollIntervalMs = 2000,
   maxAttempts = 60,
-): Promise<void> {
+): Promise<GetUploadEndpoint["response"]> {
   const { id } = params;
   const url = `${apiBase}/uploads/${id}`;
 
@@ -120,11 +123,11 @@ async function pollUploadState(
       throw new Error(`Failed to get upload state: ${response.status} - ${await response.text()}`);
     }
 
-    const data = (await response.json()) as GetUploadResponse;
+    const data = (await response.json()) as GetUploadEndpoint["response"];
     info(`Polling upload ${id}: state = ${data.state}`);
 
     if (data.state === "available") {
-      return;
+      return data;
     }
 
     if (data.state === "failed") {
@@ -138,11 +141,9 @@ async function pollUploadState(
   throw new Error(`Upload processing timed out after ${maxAttempts} attempts for ${id}`);
 }
 
-type ClaimFileParams = paths["/mod_files"]["post"]["requestBody"]["content"]["application/json"];
-type ClaimFileResponse = paths["/mod_files"]["post"]["responses"]["201"]["content"]["application/json"];
-type ClaimFileCategory = ClaimFileParams["file_category"];
+type ClaimFileEndpoint = Endpoint<"/mod_files", "post", 201>;
 
-async function claimFile(params: ClaimFileParams, apiKey: string): Promise<ClaimFileResponse> {
+async function claimFile(params: ClaimFileEndpoint["body"], apiKey: string): Promise<ClaimFileEndpoint["response"]> {
   const { upload_id, mod_uid, name, version, file_category } = params;
   const url = `${apiBase}/mod_files`;
   info(`Claiming file at: ${url}`);
@@ -162,7 +163,7 @@ async function claimFile(params: ClaimFileParams, apiKey: string): Promise<Claim
     throw new Error(`Failed to claim file: ${response.status} - ${await response.text()}`);
   }
 
-  return (await response.json()) as ClaimFileResponse;
+  return (await response.json()) as ClaimFileEndpoint["response"];
 }
 
 export async function run(): Promise<void> {
@@ -175,7 +176,7 @@ export async function run(): Promise<void> {
     const filename = getInput("filename", { required: true });
     const version = getInput("version", { required: true });
     const name = getInput("name") || path.basename(filename);
-    const fileCategory = (getInput("file_category") || "main") as ClaimFileCategory;
+    const fileCategory = (getInput("file_category") || "main") as ClaimFileEndpoint["body"]["file_category"];
 
     const { size: fileSize } = statSync(filename);
 

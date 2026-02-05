@@ -108917,7 +108917,7 @@ async function pollUploadState(params, apiKey, pollIntervalMs = 2000, maxAttempt
         const data = (await response.json());
         coreExports.info(`Polling upload ${id}: state = ${data.state}`);
         if (data.state === "available") {
-            return;
+            return data;
         }
         if (data.state === "failed") {
             throw new Error(`Upload processing failed for ${id}`);
