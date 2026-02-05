@@ -108854,14 +108854,24 @@ async function fetchWithAuth(url, apiKey, options) {
     coreExports.debug(`Fetching URL: ${url} with options: ${JSON.stringify(init, null, 2)}`);
     return fetch(url, init);
 }
-async function requestUpload(apiKey, fileSize, filename) {
+async function getModDetails(params, apiKey) {
+    const { game_domain, mod_id } = params;
+    const url = `${apiBase}/games/${game_domain}/mods/${mod_id}`;
+    const response = await fetchWithAuth(url, apiKey);
+    if (!response.ok) {
+        throw new Error(`Failed to get mod details: ${response.status} - ${await response.text()}`);
+    }
+    return (await response.json());
+}
+async function requestUpload(params, apiKey) {
+    const { filename, size_bytes } = params;
     const url = `${apiBase}/uploads`;
     coreExports.info(`Requesting upload URL from: ${url}`);
     const response = await fetchWithAuth(url, apiKey, {
         method: "POST",
         body: JSON.stringify({
             filename: require$$1$5.basename(filename),
-            size_bytes: String(fileSize),
+            size_bytes: String(size_bytes),
         }),
     });
     if (!response.ok) {
@@ -108882,8 +108892,9 @@ async function uploadFile(uploadUrl, filePath, fileSize) {
         throw new Error(`Upload failed: ${uploadRes.status} ${await uploadRes.text()}`);
     }
 }
-async function finaliseUpload(uuid, apiKey) {
-    const url = `${apiBase}/uploads/${uuid}/finalise`;
+async function finaliseUpload(params, apiKey) {
+    const { id } = params;
+    const url = `${apiBase}/uploads/${id}/finalise`;
     coreExports.info(`Finalising upload at: ${url}`);
     const response = await fetchWithAuth(url, apiKey, {
         method: "POST",
@@ -108893,8 +108904,9 @@ async function finaliseUpload(uuid, apiKey) {
     }
     return (await response.json());
 }
-async function pollUploadState(uuid, apiKey, pollIntervalMs = 2000, maxAttempts = 60) {
-    const url = `${apiBase}/uploads/${uuid}`;
+async function pollUploadState(params, apiKey, pollIntervalMs = 2000, maxAttempts = 60) {
+    const { id } = params;
+    const url = `${apiBase}/uploads/${id}`;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const response = await fetchWithAuth(url, apiKey, {
             method: "GET",
@@ -108903,59 +108915,64 @@ async function pollUploadState(uuid, apiKey, pollIntervalMs = 2000, maxAttempts 
             throw new Error(`Failed to get upload state: ${response.status} - ${await response.text()}`);
         }
         const data = (await response.json());
-        coreExports.info(`Polling upload ${uuid}: state = ${data.state}`);
+        coreExports.info(`Polling upload ${id}: state = ${data.state}`);
         if (data.state === "available") {
             return;
         }
         if (data.state === "failed") {
-            throw new Error(`Upload processing failed for ${uuid}`);
+            throw new Error(`Upload processing failed for ${id}`);
         }
         const delay = Math.min(pollIntervalMs * Math.pow(1.5, attempt), 30000);
         await new Promise((resolve) => setTimeout(resolve, delay));
     }
-    throw new Error(`Upload processing timed out after ${maxAttempts} attempts for ${uuid}`);
+    throw new Error(`Upload processing timed out after ${maxAttempts} attempts for ${id}`);
 }
-async function claimFile(apiKey, uploadId, modUid, name, version, fileCategory) {
+async function claimFile(params, apiKey) {
+    const { upload_id, mod_uid, name, version, file_category } = params;
     const url = `${apiBase}/mod_files`;
     coreExports.info(`Claiming file at: ${url}`);
     const response = await fetchWithAuth(url, apiKey, {
         method: "POST",
         body: JSON.stringify({
-            upload_id: uploadId,
-            mod_uid: modUid,
-            name: name,
-            version: version,
-            file_category: fileCategory,
+            upload_id,
+            mod_uid,
+            name,
+            version,
+            file_category,
         }),
     });
     if (!response.ok) {
         throw new Error(`Failed to claim file: ${response.status} - ${await response.text()}`);
     }
+    return (await response.json());
 }
 async function run() {
     coreExports.info("Starting NexusMods upload action");
     try {
         const apiKey = coreExports.getInput("api_key", { required: true });
-        const modUid = coreExports.getInput("mod_uid", { required: true });
+        const modId = parseInt(coreExports.getInput("mod_id", { required: true }), 10);
+        const gameDomain = coreExports.getInput("game_domain", { required: true });
         const filename = coreExports.getInput("filename", { required: true });
         const version = coreExports.getInput("version", { required: true });
         const name = coreExports.getInput("name") || require$$1$5.basename(filename);
-        const fileCategory = coreExports.getInput("file_category") || "main";
+        const fileCategory = (coreExports.getInput("file_category") || "main");
         const { size: fileSize } = statSync(filename);
-        // Step 1: Request upload location
-        const { presigned_url, uuid } = await requestUpload(apiKey, fileSize, filename);
+        // Step 1: Get UUID from mod details
+        const { uid: mod_uid } = await getModDetails({ game_domain: gameDomain, mod_id: modId }, apiKey);
+        // Step 2: Request upload location
+        const { presigned_url, uuid } = await requestUpload({ size_bytes: fileSize, filename }, apiKey);
         coreExports.info(`Received upload UUID: ${uuid}`);
-        // Step 2: Upload file data
+        // Step 3: Upload file data
         await uploadFile(presigned_url, filename, fileSize);
         coreExports.info("File data uploaded successfully");
-        // Step 3: Finalise upload
-        const finaliseResult = await finaliseUpload(uuid, apiKey);
+        // Step 4: Finalise upload
+        const finaliseResult = await finaliseUpload({ id: uuid }, apiKey);
         coreExports.info(`Finalised upload: ${finaliseResult.uuid} (state: ${finaliseResult.state})`);
-        // Step 4: Poll until upload is available
-        await pollUploadState(uuid, apiKey);
+        // Step 5: Poll until upload is available
+        await pollUploadState({ id: uuid }, apiKey);
         coreExports.info("Upload is now available");
-        // Step 5: Claim file (associate with mod)
-        await claimFile(apiKey, uuid, modUid, name, version, fileCategory);
+        // Step 6: Claim file (associate with mod)
+        await claimFile({ upload_id: uuid, mod_uid, name, version, file_category: fileCategory }, apiKey);
         coreExports.info("File uploaded successfully to NexusMods.");
     }
     catch (error) {

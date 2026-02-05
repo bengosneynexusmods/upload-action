@@ -1,3 +1,4 @@
 dist/*.js
 *.yaml
 *.yml
+src/openapi.schema.ts

@@ -13,7 +13,8 @@ This GitHub Action uploads a file to NexusMods using the NexusMods v3 API. It is
 | Name          | Description                          | Required | Default              |
 | ------------- | ------------------------------------ | -------- | -------------------- |
 | api_key       | API key for NexusMods                | Yes      |                      |
-| mod_uid       | Mod UID on NexusMods                 | Yes      |                      |
+| game_doamin   | Game domainname on NexusMods         | Yes      |                      |
+| mod_id        | Mod ID on NexusMods                  | Yes      |                      |
 | filename      | Path to the file to upload           | Yes      |                      |
 | version       | Version string for the uploaded file | Yes      |                      |
 | name          | Display name for the file            | No       | basename of filename |
@@ -33,7 +34,8 @@ First, use another action to create a zip file. Then, use this action to upload 
   uses: <owner>/<repo>@<tag>
   with:
     api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-    mod_uid: <your_mod_uid>
+    mod_id: <mod_id>
+    game_domain: <game_doaminname>
     filename: my-mod.zip
     version: 1.0.0
     name: My Mod # optional
@@ -65,6 +67,12 @@ Optional environment variables:
 Then run `npm run local-action` to build and run the action locally.
 
 Before committing you must build the project with `npm run build`.
+
+### OpenAPI schema
+
+This is generated using openapi-typescript via the following command:
+
+`npx openapi-typescript openapi.yaml -o src/openapi.schema.ts`
 
 ## License
 

@@ -7,8 +7,11 @@ inputs:
   api_key:
     description: API key
     required: true
-  mod_uid:
-    description: Mod UID on Nexus Mods
+  mod_id:
+    description: Mod ID on Nexus Mods
+    required: true
+  game_domainname:
+    description: Game Domain Name on Nexus Mods
     required: true
   filename:
     description: Name of the zip file to upload
