@@ -25,7 +25,8 @@
     "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
-    "local-action": "npx @github/local-action . src/index.ts .env"
+    "local-action": "npx @github/local-action . src/index.ts .env",
+    "openapi-spec": "npx openapi-typescript https://api.nexusmods.com/openapi.yaml -o src/openapi.schema.ts"
   },
   "license": "MIT",
   "prettier": {

@@ -72,7 +72,7 @@ Before committing you must build the project with `npm run build`.
 
 This is generated using openapi-typescript via the following command:
 
-`npx openapi-typescript openapi.yaml -o src/openapi.schema.ts`
+`npm run openapi-spec`
 
 ## License
 
