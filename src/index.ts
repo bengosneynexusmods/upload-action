@@ -1,4 +1,4 @@
-import { getInput, info, debug, setFailed } from "@actions/core";
+import { getInput, info, debug, setFailed, setOutput } from "@actions/core";
 import { statSync, readFileSync } from "fs";
 import process from "process";
 import path from "path";
@@ -182,6 +182,7 @@ export async function run(): Promise<void> {
 
     // Step 1: Get UUID from mod details
     const { uid: mod_uid } = await getModDetails({ game_domain: gameDomain, mod_id: modId }, apiKey);
+    info(`Received mod UUID: ${mod_uid}`);
 
     // Step 2: Request upload location
     const { presigned_url, uuid } = await requestUpload({ size_bytes: fileSize, filename }, apiKey);
@@ -200,7 +201,12 @@ export async function run(): Promise<void> {
     info("Upload is now available");
 
     // Step 6: Claim file (associate with mod)
-    await claimFile({ upload_id: uuid, mod_uid, name, version, file_category: fileCategory }, apiKey);
+    const { uid: file_uid } = await claimFile(
+      { upload_id: uuid, mod_uid, name, version, file_category: fileCategory },
+      apiKey,
+    );
+    setOutput("file_uid", file_uid);
+    info("File claimed successfully");
 
     info("File uploaded successfully to NexusMods.");
   } catch (error) {

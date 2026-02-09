@@ -27364,6 +27364,7 @@ async function run() {
         const { size: fileSize } = statSync(filename);
         // Step 1: Get UUID from mod details
         const { uid: mod_uid } = await getModDetails({ game_domain: gameDomain, mod_id: modId }, apiKey);
+        coreExports.info(`Received mod UUID: ${mod_uid}`);
         // Step 2: Request upload location
         const { presigned_url, uuid } = await requestUpload({ size_bytes: fileSize, filename }, apiKey);
         coreExports.info(`Received upload UUID: ${uuid}`);
@@ -27377,7 +27378,9 @@ async function run() {
         await pollUploadState({ id: uuid }, apiKey);
         coreExports.info("Upload is now available");
         // Step 6: Claim file (associate with mod)
-        await claimFile({ upload_id: uuid, mod_uid, name, version, file_category: fileCategory }, apiKey);
+        const { uid: file_uid } = await claimFile({ upload_id: uuid, mod_uid, name, version, file_category: fileCategory }, apiKey);
+        coreExports.setOutput("file_uid", file_uid);
+        coreExports.info("File claimed successfully");
         coreExports.info("File uploaded successfully to NexusMods.");
     }
     catch (error) {

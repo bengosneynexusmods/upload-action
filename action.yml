@@ -23,6 +23,9 @@ inputs:
     description: 'File category for the uploaded file (default: 1)'
     required: false
     default: '1'
+outputs:
+  file_uid:
+    description: The UID of the uploaded file on Nexus Mods
 runs:
   using: node20
   main: dist/index.js
