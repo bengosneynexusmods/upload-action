@@ -1,6 +1,5 @@
 import { getInput, info, debug, setFailed } from "@actions/core";
-import { statSync, createReadStream } from "fs";
-import fetch from "node-fetch";
+import { statSync, readFileSync } from "fs";
 import process from "process";
 import path from "path";
 
@@ -68,13 +67,14 @@ async function requestUpload(
 }
 
 async function uploadFile(uploadUrl: string, filePath: string, fileSize: number): Promise<void> {
+  const fileBuffer = readFileSync(filePath);
   const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
       "Content-Type": "application/octet-stream",
       "Content-Length": String(fileSize),
     },
-    body: createReadStream(filePath),
+    body: fileBuffer,
   });
 
   if (!uploadRes.ok) {

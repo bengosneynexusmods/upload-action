@@ -1,6 +1,6 @@
 import require$$0 from 'os';
 import require$$0$1 from 'crypto';
-import require$$1, { statSync, createReadStream } from 'fs';
+import require$$1, { statSync, readFileSync } from 'fs';
 import require$$1$5 from 'path';
 import require$$2 from 'http';
 import require$$3 from 'https';
@@ -27,7 +27,6 @@ import require$$6 from 'string_decoder';
 import require$$0$9 from 'diagnostics_channel';
 import require$$2$2 from 'child_process';
 import require$$6$1 from 'timers';
-import fetch from 'node-fetch';
 import process$1 from 'process';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -27285,13 +27284,14 @@ async function requestUpload(params, apiKey) {
     return (await response.json());
 }
 async function uploadFile(uploadUrl, filePath, fileSize) {
+    const fileBuffer = readFileSync(filePath);
     const uploadRes = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
             "Content-Type": "application/octet-stream",
             "Content-Length": String(fileSize),
         },
-        body: createReadStream(filePath),
+        body: fileBuffer,
     });
     if (!uploadRes.ok) {
         throw new Error(`Upload failed: ${uploadRes.status} ${await uploadRes.text()}`);
