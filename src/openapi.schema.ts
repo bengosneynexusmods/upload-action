@@ -89,6 +89,8 @@ export interface paths {
         /**
          * Create mod file
          * @description Creates a new mod file using the data from a finalised [upload session](#tag/uploads/operation/createUpload).
+         *
+         *     Note that this is for entirely new files, not new versions of existing files.
          */
         post: operations["createModFile"];
         delete?: never;
@@ -105,7 +107,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get mod details
+         * Get mod
          * @description Retrieve specified mod, from a specified game.
          */
         get: operations["getMod"];
@@ -127,8 +129,12 @@ export interface components {
              * @description Upload ID
              */
             upload_id: string;
-            /** @description Mod UID */
-            mod_uid: number;
+            /**
+             * @description Mod UID
+             *     * Use [get mod](#tag/mods/operation/getMod) to get the UID for a mod using the data from a site URL e.g.
+             *       `/skyrimspecialedition/mods/12604`.
+             */
+            mod_uid: string;
             /** @description Mod file name */
             name: string;
             /** @description Mod file version */
@@ -139,7 +145,10 @@ export interface components {
             file_category: "main" | "optional" | "miscellaneous";
         };
         CreateUploadRequest: {
-            /** @description Size of file in bytes */
+            /**
+             * Format: int64
+             * @description Size of file in bytes
+             */
             size_bytes: number;
             /** @description User-defined filename */
             filename: string;
@@ -235,7 +244,7 @@ export interface components {
         };
         GetModDetails: {
             /** @description Unique identifier for the mod */
-            uid: number;
+            uid: string;
             /** @description Mod ID */
             mod_id: number;
             /** @description Game ID */
@@ -291,7 +300,7 @@ export interface components {
         };
         Mod: {
             /** @description Unique identifier for the mod */
-            uid: number;
+            uid: string;
             /** @description Mod ID */
             mod_id: number;
             /** @description Game ID */
@@ -435,7 +444,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Size of file in bytes */
+                    /**
+                     * Format: int64
+                     * @description Size of file in bytes
+                     */
                     size_bytes: number;
                     /** @description User-defined filename */
                     filename: string;
@@ -579,8 +591,12 @@ export interface operations {
                      * @description Upload ID
                      */
                     upload_id: string;
-                    /** @description Mod UID */
-                    mod_uid: number;
+                    /**
+                     * @description Mod UID
+                     *     * Use [get mod](#tag/mods/operation/getMod) to get the UID for a mod using the data from a site URL e.g.
+                     *       `/skyrimspecialedition/mods/12604`.
+                     */
+                    mod_uid: string;
                     /** @description Mod file name */
                     name: string;
                     /** @description Mod file version */
@@ -669,9 +685,17 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Game domain name */
+                /**
+                 * @description Game domain name.
+                 *
+                 *     This is the human readable game name which appears in URLs on the site e.g. `skyrimspecialedition` and `fallout4`.
+                 */
                 game_domain: string;
-                /** @description Mod ID */
+                /**
+                 * @description Mod ID, specific to each game (not the unique ID).
+                 *
+                 *     This is the mod identifier which appears in URLs on the site e.g. `12604` from path `/skyrimspecialedition/mods/12604`.
+                 */
                 mod_id: number;
             };
             cookie?: never;
@@ -686,7 +710,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description Unique identifier for the mod */
-                        uid: number;
+                        uid: string;
                         /** @description Mod ID */
                         mod_id: number;
                         /** @description Game ID */
