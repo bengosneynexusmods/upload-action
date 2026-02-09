@@ -172,7 +172,7 @@ export async function run(): Promise<void> {
   try {
     const apiKey = getInput("api_key", { required: true });
     const modId = parseInt(getInput("mod_id", { required: true }), 10);
-    const gameDomain = getInput("game_domain", { required: true });
+    const gameDomain = getInput("game_domain_name", { required: true });
     const filename = getInput("filename", { required: true });
     const version = getInput("version", { required: true });
     const name = getInput("name") || path.basename(filename);

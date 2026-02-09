@@ -10,15 +10,14 @@ This GitHub Action uploads a file to NexusMods using the NexusMods v3 API. It is
 
 ## Inputs
 
-| Name          | Description                          | Required | Default              |
-| ------------- | ------------------------------------ | -------- | -------------------- |
-| api_key       | API key for NexusMods                | Yes      |                      |
-| game_doamin   | Game domainname on NexusMods         | Yes      |                      |
-| mod_id        | Mod ID on NexusMods                  | Yes      |                      |
-| filename      | Path to the file to upload           | Yes      |                      |
-| version       | Version string for the uploaded file | Yes      |                      |
-| name          | Display name for the file            | No       | basename of filename |
-| file_category | File category for the uploaded file  | No       | main                 |
+| Name             | Description                                        | Required | Default |
+| ---------------- | -------------------------------------------------- | -------- | ------- |
+| api_key          | API key                                            | Yes      |         |
+| mod_id           | Mod ID on Nexus Mods                               | Yes      |         |
+| game_domain_name | Game Domain Name on Nexus Mods                     | Yes      |         |
+| filename         | Name of the zip file to upload                     | Yes      |         |
+| version          | Version string for the uploaded file (e.g., 1.0.0) | Yes      |         |
+| fileCategory     | File category for the uploaded file                | No       | 1       |
 
 ## Usage
 
@@ -35,11 +34,10 @@ First, use another action to create a zip file. Then, use this action to upload 
   with:
     api_key: ${{ secrets.NEXUSMODS_API_KEY }}
     mod_id: <mod_id>
-    game_domain: <game_doaminname>
+    game_domain_name: <game_domain_name>
     filename: my-mod.zip
     version: 1.0.0
-    name: My Mod # optional
-    file_category: main # optional
+    fileCategory: 1 # optional
 ```
 
 ## Development
@@ -53,14 +51,14 @@ This project requires Node v20 or higher
 First run `npm install`, then create a `.env` file with the following required environment variables:
 
 - `INPUT_API_KEY`
-- `INPUT_MOD_UID`
+- `INPUT_MOD_ID`
+- `INPUT_GAME_DOMAIN_NAME`
 - `INPUT_FILENAME`
 - `INPUT_VERSION`
 
 Optional environment variables:
 
-- `INPUT_NAME`
-- `INPUT_FILE_CATEGORY`
+- `INPUT_FILECATEGORY`
 - `NEXUSMODS_API_BASE` - Override the API base URL (defaults to `https://api.nexusmods.com/v3`)
 - `ACTIONS_STEP_DEBUG=true` - Enable debug output
 

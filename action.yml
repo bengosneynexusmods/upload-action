@@ -10,7 +10,7 @@ inputs:
   mod_id:
     description: Mod ID on Nexus Mods
     required: true
-  game_domainname:
+  game_domain_name:
     description: Game Domain Name on Nexus Mods
     required: true
   filename:
